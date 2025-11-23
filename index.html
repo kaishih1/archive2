@@ -18,20 +18,15 @@
         }
 
         .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
             height: 100vh;
         }
 
         .panel {
             display: flex;
             flex-direction: column;
-            border-right: 2px solid #ccc;
+            flex: 1;
             overflow: hidden;
-        }
-
-        .panel:last-child {
-            border-right: none;
         }
 
         .panel-header {
@@ -369,26 +364,6 @@
                 <div id="searchResults" class="search-results"></div>
             </div>
         </div>
-
-        <!-- Right Panel: Archive.is -->
-        <div class="panel">
-            <div class="panel-header">
-                <h3>Archive.is Checker</h3>
-                <div class="url-input-container">
-                    <input
-                        type="text"
-                        id="urlInput"
-                        placeholder="Paste URL to check archive..."
-                        autocomplete="off"
-                    >
-                    <button id="checkArchiveButton">Check Archive</button>
-                </div>
-                <div class="info-text">Paste a URL to check if it's been archived</div>
-            </div>
-            <div class="panel-content">
-                <iframe id="archiveFrame" src="https://archive.is/"></iframe>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -398,9 +373,6 @@
         const searchResults = document.getElementById('searchResults');
         const currentUrlInput = document.getElementById('currentUrlInput');
         const sendToArchiveButton = document.getElementById('sendToArchiveButton');
-        const urlInput = document.getElementById('urlInput');
-        const checkArchiveButton = document.getElementById('checkArchiveButton');
-        const archiveFrame = document.getElementById('archiveFrame');
         const modeToggle = document.getElementById('modeToggle');
         const modeText = document.getElementById('modeText');
         const apiConfig = document.getElementById('apiConfig');
@@ -500,8 +472,7 @@
                 // Auto-grab first result and check archive
                 const firstUrl = stripQueryParams(data.items[0].link);
                 currentUrlInput.value = firstUrl;
-                urlInput.value = firstUrl;
-                checkArchive();
+                checkArchive(firstUrl);
 
             } catch (error) {
                 searchResults.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
@@ -554,8 +525,7 @@
             const url = currentUrlInput.value.trim();
             if (url) {
                 const cleanUrl = stripQueryParams(url);
-                urlInput.value = cleanUrl;
-                checkArchive();
+                checkArchive(cleanUrl);
             }
         }
 
@@ -568,21 +538,12 @@
         });
 
         // Handle archive.is check
-        function checkArchive() {
-            const url = urlInput.value.trim();
+        function checkArchive(url) {
             if (url) {
                 const archiveSearchUrl = `https://archive.is/${url}`;
                 window.open(archiveSearchUrl, '_blank');
             }
         }
-
-        checkArchiveButton.addEventListener('click', checkArchive);
-
-        urlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                checkArchive();
-            }
-        });
     </script>
 </body>
 </html>
