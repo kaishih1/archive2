@@ -1,1 +1,208 @@
-Hello
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search & Archive Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100vh;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #ccc;
+            overflow: hidden;
+        }
+
+        .panel:last-child {
+            border-right: none;
+        }
+
+        .panel-header {
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        #searchInput {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #searchButton {
+            padding: 10px 20px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #searchButton:hover {
+            background-color: #357ae8;
+        }
+
+        .url-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #checkArchiveButton {
+            padding: 8px 15px;
+            background-color: #34a853;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        #checkArchiveButton:hover {
+            background-color: #2d8e47;
+        }
+
+        .panel-content {
+            flex: 1;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel: Google Search -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Google Search</h3>
+                <div class="search-container">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Enter search query..."
+                        autocomplete="off"
+                    >
+                    <button id="searchButton">Search</button>
+                </div>
+                <div class="info-text">Enter a search term and press Search or hit Enter</div>
+            </div>
+            <div class="panel-content">
+                <iframe id="googleFrame" src="about:blank"></iframe>
+            </div>
+        </div>
+
+        <!-- Right Panel: Archive.is -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Archive.is Checker</h3>
+                <div class="url-input-container">
+                    <input
+                        type="text"
+                        id="urlInput"
+                        placeholder="Paste URL to check archive..."
+                        autocomplete="off"
+                    >
+                    <button id="checkArchiveButton">Check Archive</button>
+                </div>
+                <div class="info-text">Paste a URL to check if it's been archived</div>
+            </div>
+            <div class="panel-content">
+                <iframe id="archiveFrame" src="https://archive.is/"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const googleFrame = document.getElementById('googleFrame');
+        const urlInput = document.getElementById('urlInput');
+        const checkArchiveButton = document.getElementById('checkArchiveButton');
+        const archiveFrame = document.getElementById('archiveFrame');
+
+        // Handle Google search
+        function performSearch() {
+            const query = searchInput.value.trim();
+            if (query) {
+                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&igu=1`;
+                googleFrame.src = googleSearchUrl;
+            }
+        }
+
+        searchButton.addEventListener('click', performSearch);
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Handle archive.is check
+        function checkArchive() {
+            const url = urlInput.value.trim();
+            if (url) {
+                // Archive.is search URL format
+                const archiveSearchUrl = `https://archive.is/${encodeURIComponent(url)}`;
+                archiveFrame.src = archiveSearchUrl;
+            }
+        }
+
+        checkArchiveButton.addEventListener('click', checkArchive);
+
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkArchive();
+            }
+        });
+    </script>
+</body>
+</html>
