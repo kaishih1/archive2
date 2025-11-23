@@ -68,6 +68,115 @@
             background-color: #357ae8;
         }
 
+        /* Toggle Switch */
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4285f4;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #ea4335;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .mode-text {
+            font-size: 14px;
+            color: #666;
+            min-width: 80px;
+        }
+
+        /* API Key Config */
+        .api-config {
+            display: none;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+        }
+
+        .api-config.show {
+            display: block;
+        }
+
+        .api-config input {
+            width: 100%;
+            padding: 8px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .api-config label {
+            font-size: 11px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .api-config .help-text {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .api-config .help-link {
+            color: #4285f4;
+            text-decoration: none;
+        }
+
         .url-input-container {
             display: flex;
             gap: 10px;
@@ -127,6 +236,7 @@
         .panel-content {
             flex: 1;
             position: relative;
+            overflow-y: auto;
         }
 
         iframe {
@@ -145,6 +255,65 @@
             margin-bottom: 10px;
             color: #333;
         }
+
+        /* Search Results Display */
+        .search-results {
+            display: none;
+            padding: 20px;
+        }
+
+        .search-results.show {
+            display: block;
+        }
+
+        .result-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-title {
+            font-size: 18px;
+            color: #1a0dab;
+            text-decoration: none;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .result-title:hover {
+            text-decoration: underline;
+        }
+
+        .result-url {
+            font-size: 12px;
+            color: #006621;
+            margin-bottom: 5px;
+        }
+
+        .result-snippet {
+            font-size: 13px;
+            color: #545454;
+            line-height: 1.4;
+        }
+
+        .status-message {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .error-message {
+            padding: 20px;
+            background-color: #ffebee;
+            color: #c62828;
+            border-radius: 4px;
+            margin: 20px;
+        }
     </style>
 </head>
 <body>
@@ -153,6 +322,28 @@
         <div class="panel">
             <div class="panel-header">
                 <h3>Google Search</h3>
+
+                <!-- Mode Toggle -->
+                <div class="mode-toggle">
+                    <span class="toggle-label">Mode:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="modeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="mode-text" id="modeText">Search</span>
+                </div>
+
+                <!-- API Configuration (shown only in Archive mode) -->
+                <div class="api-config" id="apiConfig">
+                    <label>API Key:</label>
+                    <input type="text" id="apiKey" placeholder="Enter your Google API Key">
+                    <label style="margin-top: 10px;">Search Engine ID:</label>
+                    <input type="text" id="searchEngineId" placeholder="Enter your Search Engine ID">
+                    <div class="help-text">
+                        Don't have these? <a href="https://developers.google.com/custom-search/v1/overview" target="_blank" class="help-link">Get API credentials here</a>
+                    </div>
+                </div>
+
                 <div class="search-container">
                     <input
                         type="text"
@@ -171,10 +362,11 @@
                     >
                     <button id="sendToArchiveButton">→ Archive</button>
                 </div>
-                <div class="info-text">Tip: Right-click a search result → "Copy link address" → Paste above</div>
+                <div class="info-text" id="infoText">Tip: Right-click a search result → "Copy link address" → Paste above</div>
             </div>
             <div class="panel-content">
                 <iframe id="googleFrame" src="about:blank"></iframe>
+                <div id="searchResults" class="search-results"></div>
             </div>
         </div>
 
@@ -203,11 +395,50 @@
         const searchInput = document.getElementById('searchInput');
         const searchButton = document.getElementById('searchButton');
         const googleFrame = document.getElementById('googleFrame');
+        const searchResults = document.getElementById('searchResults');
         const currentUrlInput = document.getElementById('currentUrlInput');
         const sendToArchiveButton = document.getElementById('sendToArchiveButton');
         const urlInput = document.getElementById('urlInput');
         const checkArchiveButton = document.getElementById('checkArchiveButton');
         const archiveFrame = document.getElementById('archiveFrame');
+        const modeToggle = document.getElementById('modeToggle');
+        const modeText = document.getElementById('modeText');
+        const apiConfig = document.getElementById('apiConfig');
+        const apiKey = document.getElementById('apiKey');
+        const searchEngineId = document.getElementById('searchEngineId');
+        const infoText = document.getElementById('infoText');
+
+        let isArchiveMode = false;
+
+        // Load saved API credentials from localStorage
+        if (localStorage.getItem('googleApiKey')) {
+            apiKey.value = localStorage.getItem('googleApiKey');
+        }
+        if (localStorage.getItem('googleSearchEngineId')) {
+            searchEngineId.value = localStorage.getItem('googleSearchEngineId');
+        }
+
+        // Save API credentials when changed
+        apiKey.addEventListener('change', () => {
+            localStorage.setItem('googleApiKey', apiKey.value);
+        });
+        searchEngineId.addEventListener('change', () => {
+            localStorage.setItem('googleSearchEngineId', searchEngineId.value);
+        });
+
+        // Toggle mode
+        modeToggle.addEventListener('change', (e) => {
+            isArchiveMode = e.target.checked;
+            if (isArchiveMode) {
+                modeText.textContent = 'Archive';
+                apiConfig.classList.add('show');
+                infoText.textContent = 'Archive mode: Auto-fetches first result and checks archive.is';
+            } else {
+                modeText.textContent = 'Search';
+                apiConfig.classList.remove('show');
+                infoText.textContent = 'Tip: Right-click a search result → "Copy link address" → Paste above';
+            }
+        });
 
         // Strip query parameters from URL
         function stripQueryParams(url) {
@@ -216,7 +447,6 @@
                 const urlObj = new URL(url);
                 return urlObj.origin + urlObj.pathname;
             } catch (e) {
-                // If URL parsing fails, manually strip everything after ?
                 const questionMarkIndex = url.indexOf('?');
                 if (questionMarkIndex !== -1) {
                     return url.substring(0, questionMarkIndex);
@@ -225,12 +455,76 @@
             }
         }
 
-        // Handle Google search
+        // Handle Google Custom Search API
+        async function performCustomSearch(query) {
+            const apiKeyValue = apiKey.value.trim();
+            const searchEngineIdValue = searchEngineId.value.trim();
+
+            if (!apiKeyValue || !searchEngineIdValue) {
+                searchResults.innerHTML = '<div class="error-message">Please enter both API Key and Search Engine ID above.</div>';
+                return;
+            }
+
+            searchResults.innerHTML = '<div class="status-message">Searching...</div>';
+            googleFrame.style.display = 'none';
+            searchResults.classList.add('show');
+
+            try {
+                const url = `https://www.googleapis.com/customsearch/v1?key=${apiKeyValue}&cx=${searchEngineIdValue}&q=${encodeURIComponent(query)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.error) {
+                    searchResults.innerHTML = `<div class="error-message">API Error: ${data.error.message}</div>`;
+                    return;
+                }
+
+                if (!data.items || data.items.length === 0) {
+                    searchResults.innerHTML = '<div class="status-message">No results found.</div>';
+                    return;
+                }
+
+                // Display results
+                let html = '';
+                data.items.forEach((item, index) => {
+                    html += `
+                        <div class="result-item">
+                            <a href="${item.link}" class="result-title" target="_blank">${item.title}</a>
+                            <div class="result-url">${item.displayLink}</div>
+                            <div class="result-snippet">${item.snippet || ''}</div>
+                        </div>
+                    `;
+                });
+                searchResults.innerHTML = html;
+
+                // Auto-grab first result and check archive
+                const firstUrl = stripQueryParams(data.items[0].link);
+                currentUrlInput.value = firstUrl;
+                urlInput.value = firstUrl;
+                checkArchive();
+
+            } catch (error) {
+                searchResults.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Handle standard Google search
+        function performStandardSearch(query) {
+            googleFrame.style.display = 'block';
+            searchResults.classList.remove('show');
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&igu=1`;
+            googleFrame.src = googleSearchUrl;
+        }
+
+        // Handle search based on mode
         function performSearch() {
             const query = searchInput.value.trim();
-            if (query) {
-                const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&igu=1`;
-                googleFrame.src = googleSearchUrl;
+            if (!query) return;
+
+            if (isArchiveMode) {
+                performCustomSearch(query);
+            } else {
+                performStandardSearch(query);
             }
         }
 
@@ -247,7 +541,6 @@
             const rawUrl = e.target.value;
             if (rawUrl.includes('?')) {
                 const cleanUrl = stripQueryParams(rawUrl);
-                // Only update if different to avoid cursor jumping
                 if (cleanUrl !== rawUrl) {
                     setTimeout(() => {
                         e.target.value = cleanUrl;
@@ -278,7 +571,6 @@
         function checkArchive() {
             const url = urlInput.value.trim();
             if (url) {
-                // Archive.is search URL format
                 const archiveSearchUrl = `https://archive.is/${encodeURIComponent(url)}`;
                 archiveFrame.src = archiveSearchUrl;
             }
