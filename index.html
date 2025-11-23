@@ -572,7 +572,7 @@
             const url = urlInput.value.trim();
             if (url) {
                 const archiveSearchUrl = `https://archive.is/${url}`;
-                archiveFrame.src = archiveSearchUrl;
+                window.open(archiveSearchUrl, '_blank');
             }
         }
 
