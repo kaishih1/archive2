@@ -571,8 +571,8 @@
         function checkArchive() {
             const url = urlInput.value.trim();
             if (url) {
-                const archiveSearchUrl = `https://archive.is/${encodeURIComponent(url)}`;
-                archiveFrame.src = archiveSearchUrl;
+                const archiveSearchUrl = `https://archive.is/${url}`;
+                window.open(archiveSearchUrl, '_blank');
             }
         }
 
