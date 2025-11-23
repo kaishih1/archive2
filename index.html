@@ -95,6 +95,35 @@
             background-color: #2d8e47;
         }
 
+        .url-display-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #currentUrlInput {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #sendToArchiveButton {
+            padding: 8px 15px;
+            background-color: #ea4335;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        #sendToArchiveButton:hover {
+            background-color: #d33828;
+        }
+
         .panel-content {
             flex: 1;
             position: relative;
@@ -133,7 +162,16 @@
                     >
                     <button id="searchButton">Search</button>
                 </div>
-                <div class="info-text">Enter a search term and press Search or hit Enter</div>
+                <div class="url-display-container">
+                    <input
+                        type="text"
+                        id="currentUrlInput"
+                        placeholder="Paste URL from search results here..."
+                        autocomplete="off"
+                    >
+                    <button id="sendToArchiveButton">→ Archive</button>
+                </div>
+                <div class="info-text">Paste a URL to strip query params and send to archive checker</div>
             </div>
             <div class="panel-content">
                 <iframe id="googleFrame" src="about:blank"></iframe>
@@ -165,9 +203,27 @@
         const searchInput = document.getElementById('searchInput');
         const searchButton = document.getElementById('searchButton');
         const googleFrame = document.getElementById('googleFrame');
+        const currentUrlInput = document.getElementById('currentUrlInput');
+        const sendToArchiveButton = document.getElementById('sendToArchiveButton');
         const urlInput = document.getElementById('urlInput');
         const checkArchiveButton = document.getElementById('checkArchiveButton');
         const archiveFrame = document.getElementById('archiveFrame');
+
+        // Strip query parameters from URL
+        function stripQueryParams(url) {
+            if (!url) return '';
+            try {
+                const urlObj = new URL(url);
+                return urlObj.origin + urlObj.pathname;
+            } catch (e) {
+                // If URL parsing fails, manually strip everything after ?
+                const questionMarkIndex = url.indexOf('?');
+                if (questionMarkIndex !== -1) {
+                    return url.substring(0, questionMarkIndex);
+                }
+                return url;
+            }
+        }
 
         // Handle Google search
         function performSearch() {
@@ -183,6 +239,38 @@
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 performSearch();
+            }
+        });
+
+        // Auto-strip query params as user types/pastes URL
+        currentUrlInput.addEventListener('input', (e) => {
+            const rawUrl = e.target.value;
+            if (rawUrl.includes('?')) {
+                const cleanUrl = stripQueryParams(rawUrl);
+                // Only update if different to avoid cursor jumping
+                if (cleanUrl !== rawUrl) {
+                    setTimeout(() => {
+                        e.target.value = cleanUrl;
+                    }, 100);
+                }
+            }
+        });
+
+        // Send cleaned URL to archive checker
+        function sendToArchive() {
+            const url = currentUrlInput.value.trim();
+            if (url) {
+                const cleanUrl = stripQueryParams(url);
+                urlInput.value = cleanUrl;
+                checkArchive();
+            }
+        }
+
+        sendToArchiveButton.addEventListener('click', sendToArchive);
+
+        currentUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendToArchive();
             }
         });
 
